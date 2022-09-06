@@ -1,15 +1,21 @@
+mod proto;
+
 use std::env;
 use futures_util::{future, pin_mut, StreamExt};
+use protobuf::Message as ProtoMsg;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use url::Url;
+use serde_json::{Deserializer, Value};
+
+use proto::messages::{Summary};
 
 #[tokio::main]
 async fn main() {
     println!("Hello, world!");
 
     // let connect_addr = env::args().nth(1).unwrap_or_else(|| panic!("this program requires at least one argument"));
-    let connect_addr = env::args().nth(1).unwrap_or_else(|| "wss://stream.binance.com:9443/ws/ethbtc@depth20@100ms".to_string());
+    let connect_addr = env::args().nth(1).unwrap_or_else(|| "wss://stream.binance.com:9443/ws/ethbtc@depth20@1000ms".to_string());
     println!("connect_addr: {}", connect_addr);
 
     let url= Url::parse(&connect_addr).unwrap();
@@ -27,26 +33,36 @@ async fn main() {
     let ws_to_stdout = {
         read.for_each(|message| async {
             let data = message.unwrap().into_data();
-            println!("praaa");
+            let stream = Deserializer::from_slice(&data).into_iter::<Value>();
+
+            for value in stream {
+                let v = value.unwrap();
+                println!("\n\nlastUpdateId: {}", v["lastUpdateId"]);
+                println!("\nbids: {}", v["bids"]);
+                println!("\nasks: {}\n", v["asks"]);
+            }
+
             tokio::io::stdout().write_all(&data).await.unwrap();
         })
     };
 
     pin_mut!(stdin_to_ws, ws_to_stdout);
+
+    // awaits for one of the two futures to be ready
     future::select(stdin_to_ws, ws_to_stdout).await;
 }
 
 async fn read_stdin(tx: futures_channel::mpsc::UnboundedSender<Message>) {
     let mut stdin = tokio::io::stdin();
     loop {
-        println!("loop");
         let mut buf = vec![0; 1024];
         let n = match stdin.read(&mut buf).await {
             Err(_) | Ok(0) => break,
             Ok(n) => n,
         };
         buf.truncate(n);
-        println!("praaa buf {:?}", buf);
         tx.unbounded_send(Message::binary(buf)).unwrap();
     }
 }
+
+// async fn 
