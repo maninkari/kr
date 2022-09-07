@@ -6,9 +6,22 @@ use protobuf::Message as ProtoMsg;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use url::Url;
-use serde_json::{Deserializer, Value};
+use serde::Deserialize;
 
 use proto::messages::{Summary};
+
+#[derive(Deserialize, Debug)]
+pub struct Duo {
+    pub p: String,
+    pub q: String
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Resp {
+    pub lastUpdateId: i64,
+    pub bids: Vec<Duo>,
+    pub asks: Vec<Duo>
+}
 
 #[tokio::main]
 async fn main() {
@@ -33,14 +46,18 @@ async fn main() {
     let ws_to_stdout = {
         read.for_each(|message| async {
             let data = message.unwrap().into_data();
-            let stream = Deserializer::from_slice(&data).into_iter::<Value>();
+            let stream: Resp = serde_json::from_slice(&data).unwrap();
+            let c: f64 = stream.bids[0].p.parse().expect("Not a number!");
 
-            for value in stream {
-                let v = value.unwrap();
-                println!("\n\nlastUpdateId: {}", v["lastUpdateId"]);
-                println!("\nbids: {}", v["bids"]);
-                println!("\nasks: {}\n", v["asks"]);
-            }
+            println!("\n\nlastUpdateId: {:?}", stream.lastUpdateId);
+            println!("\nbids: {:?}\n", c);
+
+            // for value in stream {
+            //     let v = value.unwrap();
+            //     println!("\n\nlastUpdateId: {}", v["lastUpdateId"]);
+            //     println!("\nbids: {}", v["bids"]);
+            //     println!("\nasks: {}\n", v["asks"]);
+            // }
 
             tokio::io::stdout().write_all(&data).await.unwrap();
         })
