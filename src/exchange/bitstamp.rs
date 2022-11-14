@@ -15,7 +15,7 @@ pub struct Bitstamp {
 }
 
 impl Bitstamp {
-    pub async fn new(_endpoint: String, _channel: String) -> Self {
+    pub fn new(_endpoint: String, _channel: String) -> Self {
         Bitstamp {
             ws: None,
             endpoint: _endpoint,

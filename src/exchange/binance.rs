@@ -15,7 +15,7 @@ pub struct Binance {
 }
 
 impl Binance {
-    pub async fn new(_endpoint: String, _pair: String, _freq: String) -> Self {
+    pub fn new(_endpoint: String, _pair: String, _freq: String) -> Self {
         Binance {
             ws: None,
             endpoint: _endpoint,
