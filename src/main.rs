@@ -22,6 +22,6 @@ async fn main() {
         "order_book_ethbtc".to_owned(),
     );
 
-    binance.subscribe_to_orderbook_stream().await;
+    // binance.subscribe_to_orderbook_stream().await;
     bitstamp.subscribe_to_orderbook_stream().await;
 }

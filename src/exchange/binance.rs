@@ -1,12 +1,13 @@
 use super::Exchange;
 use crate::ExchangeWS;
 use async_trait::async_trait;
-use futures::{SinkExt, StreamExt};
-use futures_channel::mpsc::UnboundedReceiver;
-use futures_util::{future, pin_mut};
-use tokio::{io::AsyncWriteExt, sync::mpsc};
-use tokio_tungstenite::connect_async;
-use tokio_stream::wrappers::UnboundedReceiverStream;
+use futures::StreamExt;
+// use futures_channel::mpsc::UnboundedReceiver;
+use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
+use tokio_tungstenite::{
+    connect_async,
+    tungstenite::{protocol::Message, Error},
+};
 use url::Url;
 
 pub struct Binance {
@@ -38,7 +39,7 @@ impl Exchange for Binance {
     //     let (mut write, read) = ws_stream.split();
 
     //     let (stdin_tx, stdin_rx) = futures_channel::mpsc::unbounded();
-        
+
     //     tokio::spawn(Binance::read_stdin(stdin_tx));
 
     //     let stdin_to_ws = stdin_rx.map(Ok).forward(write);
@@ -59,15 +60,23 @@ impl Exchange for Binance {
     //     pin_mut!(stdin_to_ws, ws_to_stdout);
     //     future::select(stdin_to_ws, ws_to_stdout).await;
     // }
-    
+
     async fn subscribe_to_orderbook_stream(&mut self) {
         println!("binance");
 
         let connect_addr = format!("{}{}{}", self.endpoint, self.pair, self.freq);
         let url = Url::parse(&connect_addr).unwrap();
-        let (ws, _) = connect_async(url).await.expect("Failed to connect");
-        let (user_tx, mut user_rx) = ws.split();
-        let (tx, rx) = mpsc::unbounded_channel();
+        let (mut ws, _) = connect_async(url).await.expect("Failed to connect");
+        let (w_tx, mut w_rx) = ws.split();
 
-        let rx = UnboundedReceiverStream::new(rx);
+        // transmitter tx, and receiver rx
+        let mut tx: UnboundedSender<Result<Message, Error>>;
+        let mut rx: UnboundedReceiver<Result<Message, Error>>;
+        (tx, rx) = mpsc::unbounded_channel();
+
+        // Reading and broadcasting messages
+        while let Some(result) = w_rx.next().await {
+            println!("\n oooo \n{}", result.expect("Failed to fetch message"));
+        }
     }
+}
