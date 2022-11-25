@@ -62,7 +62,7 @@ impl Exchange for Bitstamp {
 
                 // println!("\n\nlastUpdateId: {:?}", stream.lastUpdateId);
                 // println!("\nbids: {:?}\n", c);
-
+                println!("\n --- bitsamp --- \n");
                 tokio::io::stdout().write_all(&data).await.unwrap();
             })
         };

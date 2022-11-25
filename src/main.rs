@@ -2,6 +2,7 @@ mod exchange;
 mod proto;
 
 use crate::exchange::*;
+use futures::{executor, future};
 use proto::messages::Summary;
 use protobuf::Message as ProtoMsg;
 use serde::Deserialize;
@@ -22,6 +23,12 @@ async fn main() {
         "order_book_ethbtc".to_owned(),
     );
 
-    binance.subscribe_to_orderbook_stream().await;
-    bitstamp.subscribe_to_orderbook_stream().await;
+    // binance.subscribe_to_orderbook_stream().await;
+    // bitstamp.subscribe_to_orderbook_stream().await;
+
+    future::join(
+        binance.subscribe_to_orderbook_stream(),
+        bitstamp.subscribe_to_orderbook_stream(),
+    )
+    .await;
 }

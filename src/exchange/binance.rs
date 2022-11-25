@@ -49,6 +49,8 @@ impl Exchange for Binance {
                 // println!("\n\nlastUpdateId: {:?}", stream.lastUpdateId);
                 // println!("\nbids: {:?}\n", c);
 
+                println!("\n --- binance --- \n");
+
                 tokio::io::stdout().write_all(&data).await.unwrap();
             })
         };

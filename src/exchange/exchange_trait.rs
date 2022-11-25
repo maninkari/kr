@@ -15,6 +15,7 @@ pub trait Exchange {
         println!("read_stdin Exchange");
 
         loop {
+            println!("\n---\n");
             let mut buf = vec![0; 1024];
             let n = match stdin.read(&mut buf).await {
                 Err(_) | Ok(0) => break,
