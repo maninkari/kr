@@ -27,7 +27,7 @@ impl Bitstamp {
 #[async_trait]
 impl Exchange for Bitstamp {
     async fn subscribe_to_orderbook_stream(&mut self) {
-        println!("bitstamp");
+        // println!("bitstamp");
         let url = Url::parse(&self.endpoint).unwrap();
 
         let subscription_data: String = format!(
